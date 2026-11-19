@@ -11,7 +11,15 @@ jobs:
         with: { distribution: temurin, java-version: 17 }
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: 8.9 }
-      - run: gradle assembleDebug
+      - name: Compilar
+        run: |
+          set -o pipefail
+          gradle assembleDebug --console=plain 2>&1 | tee build.log
+      - name: Mostrar erros
+        if: failure()
+        run: |
+          { grep -E '^e: ' build.log; grep -A3 'What went wrong' build.log; } | sed 's|file:///home/runner/work/Iptv/Iptv/||' | head -14 | tr '\n' ' ' > erros.txt
+          echo "::error::ERROS: $(cat erros.txt)"
       - uses: actions/upload-artifact@v4
         with:
           name: app-debug
